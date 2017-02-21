@@ -1,0 +1,2 @@
+ $CC -Wall -ggdb3 -I . parserclass.c  myB-Tree.c myB-TreeTest.c  -o myB-TreeTest 
+

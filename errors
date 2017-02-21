@@ -1,0 +1,32 @@
+henky@linux-v4g1:~/c_examples/myB-Tree> ./myB-TreeTest <todo |grep "free\|alloc"
+alloc 0x804f490
+alloc 0x804f4c8
+alloc 0x804f500
+alloc 0x804f538
+alloc 0x804f570
+alloc 0x804f5a8
+alloc 0x804f5e0
+alloc 0x804f618
+alloc 0x804f650
+alloc 0x804f688
+alloc 0x804f6c0
+alloc 0x804f6f8
+alloc 0x804f730
+alloc 0x804f768
+alloc 0x804f7a0
+alloc 0x804f7d8
+alloc 0x804f810
+alloc 0x804f848
+alloc 0x804f880
+alloc 0x804f8b8
+alloc 0x804f8f0
+*** glibc detected *** ./myB-TreeTest: munmap_chunk(): invalid pointer: 0x0804f688 ***
+free 0x804f8b8
+free 0x804f5a8
+free 0x804f848
+free 0x804f768
+free 0x804f8f0
+free 0x804f730
+free 0x804f650
+free 0x804f5e0
+free 0x804f880
