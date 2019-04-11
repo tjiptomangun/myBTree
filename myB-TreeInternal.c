@@ -381,7 +381,7 @@ int main (int argc, char **argv)
 	myb7_tree_del (pTree, 871);
 	myb7_tree_del (pTree, 574);
 	myb7_tree_del (pTree, 769);
-	//`printmyb7_tree (pTree);	    //check switch
+	//printmyb7_tree (pTree);	    //check switch
 	myb7_tree_del (pTree, 638);
 	myb7_tree_del (pTree, 663);
 	myb7_tree_del (pTree, 490);
@@ -394,13 +394,14 @@ int main (int argc, char **argv)
 	myb7_tree_del (pTree, 554);
 	myb7_tree_del (pTree, 748);
 	myb7_tree_del (pTree, 176);
-	printmyb7_tree (pTree);	    //check switch 160
+	//printmyb7_tree (pTree);	    //check switch 160
 	myb7_tree_del (pTree, 59);
-	fprintf (stdout, "-------------------------------\n");
-	printmyb7_tree (pTree);	    //check switch 161
-	myb7_tree_del (pTree, 763);
-/*
+	//fprintf (stdout, "-------------------------------\n");
 	//printmyb7_tree (pTree);	    //check switch 161
+	myb7_tree_del (pTree, 763);
+
+	//printmyb7_tree (pTree);	    //check switch 161
+
 	myb7_tree_del (pTree, 562);
 	//printmyb7_tree (pTree);	    //check switch 161
 	myb7_tree_del (pTree, 175);
@@ -622,6 +623,8 @@ int main (int argc, char **argv)
 	myb7_tree_del (pTree, 562);
 	myb7_tree_del (pTree, 28);
 	myb7_tree_del (pTree, 492);
+	printmyb7_tree (pTree);
+/*
 */
 	exit (0);
 }
