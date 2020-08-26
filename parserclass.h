@@ -295,6 +295,14 @@ typedef struct priml_item
 	struct primclass primclass;
 	struct priml_item *next;
 	void * data;
+  /*
+   * NAME         : set data
+   * DESCRIPTION  : default implementation will assign data to this item.
+   *                Will return pointer to this instance address if success
+   *                , on failure returns NULL.
+   *                The only case it is null if data to assign (void) * is null
+   **/
+	struct priml_item (*set_data) (struct priml_item *, void *); 
 }PRIML_ITEM, *PPRIML_ITEM; 
 extern PPRIML_ITEM newpriml_item ();
 
@@ -312,11 +320,44 @@ typedef struct primlist
 	PPRIML_ITEM (*getfirstchild) (struct primlist *); 
 	PPRIML_ITEM (*getnextchild) (struct primlist *); 
 	PPRIML_ITEM (*detach) (struct primlist *, PPRIML_ITEM);
+	PPRIML_ITEM (*detach) (struct primlist *, PPRIML_ITEM);
 }PRIMLIST, *PPRIMLIST; 
 
 struct tree_item * newtreeitem(struct tree_item *parent, char *name);
 PPRIML_ITEM newpriml_item ();
 PPRIMLIST newprimlist ();
+
+/**
+ * primtree_item structure
+ * got 1 parent
+ * and list of child
+ * preparedelete must prepare children for deletion too.
+ * have methods : getfirstchild, getnextchild, getparent
+ * have variable to hold currentchild
+ * primtree_item is extended primlist. with main list 
+ * stores properties and children are primtree_item; 
+ * use for this ? Think of xml tree
+ */
+
+typedef struct primtree_item
+{ 
+	PRIMLIST list;/* you can directly perform delete for this item */
+	struct primtree_item *parent;
+	struct primtree_item *head;
+	struct primtree_item *tail;
+	struct primtree_item *curr;
+	struct primtree_item *next;
+	
+	struct primtree_item * (*getparent) (struct primtree_item *);
+	struct primtree_item * (*getfirstchild) (struct primtree_item *);
+	struct primtree_item * (*getnextchild) (struct primtree_item *); 
+	int (*add)(struct primtree_item *, struct primtree_item *);
+	struct primtree_item * (*takechild) (struct primtree_item *);
+	void (*delete) (struct primtree_item *);
+	struct primtree_item * (*detach) (struct primtree_item *, struct primtree_item *);
+	struct primtree_item * (*takename) (struct primtree_item *, char *);
+	struct primtree_item * (*getname) (struct primtree_item *, char *);
+}PRIMTREE_ITEM, *PPRIMTREE_ITEM;
 
 #endif
 
