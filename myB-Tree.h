@@ -1,3 +1,5 @@
+#ifndef _MYB_TREE_H_
+#define _MYB_TREE_H_
 /**
  * myb7_node
  * 1. Every node has at most 7 children
@@ -70,3 +72,7 @@ PITEM pop (PSTACK S);
 void clean (PSTACK S); 
 
 PSTACK stack_creat(); 
+
+void printmyb7_tree (PMYB7_TREE pTree);
+
+#endif

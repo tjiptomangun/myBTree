@@ -24,6 +24,8 @@
 #define CLASS_L_ITEM 1
 #define CLASS_LIST 2
 #define CLASS_PROPERTY 3
+#define CLASS_CIRCULARITEM 4
+#define CLASS_CIRCULARLIST 5
 
 #define PRIMCLASS_PRIMCLASS 0x100 //primitive class
 #define PRIMCLASS_PRIMLITEM 0x101 //primitive listitem
@@ -53,9 +55,7 @@ typedef struct class
 	int (*delete) (struct class *);
 }STRUCT_CLASS, CLASS, *PSTRUCT_CLASS, *PCLASS; 
 
-extern PCLASS newclass (char *name);
-
-
+extern PCLASS newclass (char *name); 
 typedef struct l_item
 {
 	struct class class;
@@ -78,19 +78,24 @@ typedef struct list
 	PL_ITEM (*getfirstchild) (struct list *); 
 	PL_ITEM (*getnextchild) (struct list *); 
 	PL_ITEM (*detach) (struct list *, PL_ITEM);
-
+	int (*addproperty) (struct list *, char *, char *);
 }LIST, *PLIST;
 
 extern PLIST newlist (char *list_name);
+extern void __list_ctor (PLIST , char *);
+extern void list_resetlist (PLIST plist, char *list_name);
 
 typedef struct property
 {
 	L_ITEM l_item ;
-	char value[256]; 
-	int (*setvalue) (struct property *, char*);
+	char  value[256]; 
+	int   (*setvalue) (struct property *, char*);
+	int   (*getvalue) (struct property *, char*);
+	char *(*getvalue_ptr) (struct property *);
 }PROPERTY, *PPROPERTY; 
 
 extern PPROPERTY newproperty (char *name);
+extern PPROPERTY newproperty2 (char *name, char *value);
 
 #define MAX_STACKPTR 3000
 
@@ -101,11 +106,16 @@ typedef struct stack_ptr
 	int (* init)(struct stack_ptr *);
 	int (* push) (struct stack_ptr *, void *);
 	void * (* pop) (struct stack_ptr *);
+	int (* cleanup) (struct stack_ptr *);
+	int (* is_empty) (struct stack_ptr *);
 }STACK_PTR, *PSTACK_PTR; 
 
 extern PSTACK_PTR newstackptr ();
 
-
+/**
+ * miniparser is generic file parser structure
+ * parse is the real parser function
+ */
 typedef struct miniparser
 {
 	FILE *input;
@@ -190,6 +200,43 @@ extern int string_expectnexttoken (char *input, char *tokenlist, char *buff,
 
 extern int parse_env_str (char *instring, char *newenv, int newenv_max );
 
+
+typedef struct circularitem
+{
+	CLASS class;
+	struct circularitem *next;
+	struct circularitem *prev;
+	int   datasize;
+	void *data;
+}CIRCULARITEM, *PCIRCULARITEM;
+
+typedef struct circularlist
+{
+	CLASS class;
+	PCIRCULARITEM current;
+	int count;
+	void (*add)  (struct circularlist *, PCIRCULARITEM);
+	int (*remove) (struct circularlist *, PCIRCULARITEM);
+	PCIRCULARITEM (*take) (struct circularlist *);
+	PCIRCULARITEM  (*takename) (struct circularlist *, char *);
+}CIRCULARLIST, *PCIRCULARLIST;
+
+extern PCIRCULARITEM newcircularitem (char *name, void *data, int size);
+extern PCIRCULARLIST newcircularlist (char *name);
+/*
+ * circular list with pointer to data
+ */
+typedef struct circularitem_ext
+{
+	CIRCULARITEM  ci; 
+}CIRCULARITEM_EXT, *PCIRCULARITEM_EXT;
+
+typedef struct circularlist_ext
+{
+	CIRCULARLIST cl; 
+	/*some functions here*/
+}CIRCULARLIST_EXT, *PCIRCULARLIST_EXT;
+
 /**
  * treeitem structure
  * got 1 parent
@@ -266,6 +313,10 @@ typedef struct primlist
 	PPRIML_ITEM (*getnextchild) (struct primlist *); 
 	PPRIML_ITEM (*detach) (struct primlist *, PPRIML_ITEM);
 }PRIMLIST, *PPRIMLIST; 
+
+struct tree_item * newtreeitem(struct tree_item *parent, char *name);
+PPRIML_ITEM newpriml_item ();
+PPRIMLIST newprimlist ();
 
 #endif
 

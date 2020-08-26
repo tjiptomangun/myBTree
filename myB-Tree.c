@@ -46,7 +46,7 @@ PSTACK stack_creat()
 /**
  * myb7_node
  * 1. Every node has at most 7 children
- * 2. Every internal node has at least ceil(7) (which is 4) children
+ * 2. Every internal node has at least ceil(7/2) (which is 4) children
  * 3. The root has at least 2 children
  * 4. A non-leaf node with k children contains k-1 keys
  * 5. All leaves appear in the same level
@@ -178,7 +178,6 @@ int myb7_tree_find(PMYB7_TREE tree, int key, PMYB7_NODE *out)
  * 1. If the node contains fewer than the maximum legal
  * number of elements, then there is room for the new
  * element. Insert the new element in the node, keeping
- * the node’s elements ordered.
  * the node’s elements ordered.
  * 2. Otherwise the node is full, evenly split it into two
  * nodes so:
