@@ -484,6 +484,7 @@ int __stack_ptr_init (PSTACK_PTR p)
 	memset (p->c, 0, MAX_STACKPTR * sizeof(void *));
 	return 0;
 }
+
 int __stack_ptr_push (PSTACK_PTR p, void * v)
 {
 	if (p->top >= MAX_STACKPTR)
@@ -491,8 +492,8 @@ int __stack_ptr_push (PSTACK_PTR p, void * v)
 	p->top++; 
 	p->c[p->top] = v;
 	return 0;
-
 }
+
 void * __stack_ptr_pop (PSTACK_PTR p)
 {
 	void *ret;
@@ -830,9 +831,9 @@ static struct tree_item * __treeitem_getparent (struct tree_item *root)
  */
 static struct tree_item * __treeitem_getfirstchild (struct tree_item *root)
 {
-	struct tree_item *ret=root->head;
+	struct tree_item *ret = root->head;
 	if (root->head){
-    root->curr = root->head;
+		root->curr = root->head;
 		root->curr = (PTREE_ITEM) root->curr->next;
 	}
 	return ret;
@@ -883,18 +884,28 @@ static int __treeitem_listdelete(struct tree_item *root)
 }
 
 /*
- * NAME 	: __treeitem_detach
- * DESCRIPTION 	: detach specified list item
- * RETURNS	: 0 if success 
- *		  supplied pointer if it is not in the list
+ * NAME 									: __treeitem_detach
+ * DESCRIPTION 						: detach specified list item
+ * RETURNS								: 
+ * 					NULL					: if success 
+ *	 pointer to detached 	: if not found
  */
 static PTREE_ITEM  __treeitem_detach(struct tree_item *root, struct tree_item *detached)
 {
 	PTREE_ITEM curritem = root->head;
+	PTREE_ITEM prev = NULL;
 	while (curritem)
 	{
-		if (detached == curritem)
+		if (detached == curritem) {
+			if (prev){
+				prev->next = curritem->next;
+			}
+			else {
+				root->head = curritem->next;
+			}
 			return NULL;
+		}
+		prev = curritem;
 		curritem = curritem->next;
 	}
 	return detached;
@@ -1013,7 +1024,6 @@ struct tree_item * newtreeitem(struct tree_item *parent, char *name)
 	
 	return new;
 }
-
 
 /**
  * Name		: __circularitem_delete
@@ -1287,17 +1297,33 @@ static int __priml_item_printattributes(PPRIML_ITEM p, int ident)
 {
 	return __primclass_printattributes(&p->primclass, ident); 
 }
-static int __priml_item_delete(PPRIML_ITEM p)
-{
-	p->next = NULL;
-    if (p->data)
-    {
-       free (p->data);
-       p->data = 0;
-    }
-	__primclass_delete(& p->primclass);
-	return 0;
+
+static PPRIML_ITEM __priml_item_set_data (PPRIML_ITEM p, void *data) {
+	if (!data){
+		return NULL;
+	}
+	else {
+		p->data = data;
+		return p;
+	}
 }
+
+static int __priml_item_delete(PPRIML_ITEM node) {
+	if (!node) {
+		return 1;
+	}
+	else {
+		if(node->data) {
+			free(node->data);
+			node->data = NULL;
+		}
+		node->next = NULL;
+		node->set_data = NULL;
+		node->delete = NULL;
+		free(node); 
+	}
+	return 0;
+} 
 
 PPRIML_ITEM newpriml_item ()
 {
@@ -1309,7 +1335,9 @@ PPRIML_ITEM newpriml_item ()
 	ppriml_item->primclass.printattributes = 
 		(int (*) (PPRIMCLASS, int))(__priml_item_printattributes);
 	ppriml_item->primclass.delete = 
-		(int (*) (PPRIMCLASS))(__priml_item_delete);    
+		(int (*) (PPRIMCLASS))(__priml_item_delete);
+	ppriml_item->set_data = __priml_item_set_data;
+	ppriml_item->delete = __priml_item_delete;
 	return ppriml_item;
 }
 
@@ -1388,7 +1416,6 @@ static PPRIML_ITEM __primlist_take (PPRIMLIST plist)
 		return NULL;
 	}
 } 
-
 
 /**
  * NAME 	: __primlist_delete
@@ -1494,11 +1521,8 @@ static PPRIML_ITEM __primlist_getnextchild (PPRIMLIST plist)
 	return ret;
 }
 
-PPRIMLIST newprimlist ()
-{
-	PPRIMLIST plist = (PPRIMLIST) calloc (1, sizeof (PRIMLIST));
-	if (plist)
-	{
+static PPRIMLIST __primlist_ctor(PPRIMLIST plist) {
+	if (plist) {
 		plist->priml_item.primclass.this = (PPRIMCLASS) plist;
 		plist->priml_item.primclass.type = PRIMCLASS_PRIMLIST;
 		plist->currptr = NULL;
@@ -1515,8 +1539,145 @@ PPRIMLIST newprimlist ()
 		plist->priml_item.primclass.delete =
 			(int(*)(PPRIMCLASS))(__primlist_delete);
 		plist->detach = __primlist_detach;
+		plist->delete = __primlist_delete;
 	}
 	return plist;
 }
 
+PPRIMLIST newprimlist ()
+{
+	PPRIMLIST plist = (PPRIMLIST) calloc (1, sizeof (PRIMLIST));
+	if (plist)
+	{
+		return __primlist_ctor(plist);
+	}
+	return plist;
+}
 
+static struct primtree_item * __primtreeitem_getparent (struct primtree_item *node)
+{
+	if (node){
+		return node->parent;
+	}
+	else {
+		return NULL;
+	}
+}
+
+static struct primtree_item * __primtreeitem_getfirstchild (struct primtree_item *node) {
+	struct primtree_item *ret=node->head;
+	if (node->head){
+		node->curr = node->head->next;
+	}
+	return ret;	
+}
+
+static struct primtree_item * __primtreeitem_getnextchild (struct primtree_item *node)
+{
+	struct primtree_item *ret = node->curr;
+	if (node->curr){
+		node->curr = node->curr->next;
+	}
+	return ret;
+}
+
+/**
+ * detach head and return detached head
+ */
+static struct primtree_item * __primtreeitem_detach_head (struct primtree_item *node)
+{
+	struct primtree_item * ret = NULL;
+	if (node->head)
+	{
+		ret = node->head;
+		node->head = (PPRIMTREE_ITEM) node->head->next; 
+	}
+	return ret;
+}
+
+/**
+ * delete list items 
+ */
+static int __primtreeitem_listdelete(struct primtree_item *node)
+{
+	PPRIML_ITEM curr;
+	while (( curr = node->list.take(&node->list)))
+	{
+		curr-> delete(curr);
+		node->list.count --;
+	}
+	return 0;
+}
+
+static PPRIMTREE_ITEM  __primtreeitem_detach_node(struct primtree_item *node, struct primtree_item *detached)
+{
+	PPRIMTREE_ITEM curritem = node->head;
+	PPRIMTREE_ITEM prev = NULL;
+	while (curritem)
+	{
+		if (detached == curritem) {
+			if (prev){
+				prev->next = curritem->next;
+			}
+			else {
+				node->head = curritem->next;
+			}
+			return NULL;
+		}
+		prev = curritem;
+		curritem = curritem->next;
+	}
+	return detached;
+}
+
+static PPRIMTREE_ITEM __primtreeitem_get_child(PPRIMTREE_ITEM node, int (*fn) (PPRIMTREE_ITEM)) {
+	PPRIMTREE_ITEM curritem = node->head;
+	while (curritem)
+	{
+		if (fn(curritem))
+			return curritem;
+		curritem = curritem->next;
+	}
+	return NULL; 
+}
+
+static int __primtreeitem_delete(PPRIMTREE_ITEM pitem) {
+	PPRIMTREE_ITEM child = NULL;
+	if (pitem){
+		while((child = __primtreeitem_detach_head(pitem))) {
+			__primtreeitem_delete(child);
+		}
+	}
+	__primtreeitem_listdelete(pitem);
+	free(pitem);
+	return 0;
+}
+
+static PPRIMTREE_ITEM __primtreeitem_ctor(PPRIMTREE_ITEM pitem) {
+	if (pitem) {
+		__primlist_ctor(&pitem->list);
+		pitem->get_parent = __primtreeitem_getparent;
+		pitem->get_first_child= __primtreeitem_getfirstchild;
+		pitem->get_next_child= __primtreeitem_getnextchild;
+		pitem->detach_head= __primtreeitem_detach_head;
+		pitem->detach_node= __primtreeitem_detach_node;
+		pitem->get_child = __primtreeitem_get_child;
+		pitem->list.priml_item.primclass.delete = 
+			(int (*) (PPRIMCLASS))(__primtreeitem_delete);
+		pitem->delete= __primtreeitem_delete;
+	}
+	return pitem;
+}
+PPRIMTREE_ITEM newprimtreeitem() {
+	PPRIMTREE_ITEM pitem = (PPRIMTREE_ITEM) calloc (1, sizeof(PRIMTREE_ITEM));
+	if (pitem) {
+		__primtreeitem_ctor(pitem);
+	}
+	return pitem;
+}
+
+#ifdef _PARSER_CLASS_TEST_
+int main (int argc, char **argv) {
+	
+}
+#endif
