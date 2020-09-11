@@ -11,3 +11,6 @@ To make it just run make
    Can receive input from standard input.
    Just write help for command
    see testscript for scripting example
+
+3. For string btree 
+   cat btreegeni_test.txt |xargs ./btreestringi

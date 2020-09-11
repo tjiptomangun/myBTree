@@ -1,11 +1,11 @@
 /**
- * gcc my_btree_generic.c -Wall -ggdb3 -o my_btree_generic
+ * gcc my_btree_string.c -Wall -ggdb3 -o my_btree_string
  */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "my_btree_generic.h"
+#include "my_btree_string.h"
 
 static void key_strcpy(char *dst, char *src) {
 	strncpy(dst, src, B7_G_KSIZE - 1);
@@ -15,22 +15,22 @@ static void key_strcpy(char *dst, char *src) {
  * unassigned key is < 0
  *
  * */
-int push (PGENERIC_STACK S, PMYB7_GENERIC_NODE N, int dir)
+int push (PSTRING_STACK S, PMYB7_STRING_NODE N, int dir)
 { 
 	(*S).el[++(*S).top].pnd = N;
 	(*S).el[(*S).top].e = dir;
 	return 0;
 }
 
-PGENERIC_ITEM pop (PGENERIC_STACK S)
+PSTRING_ITEM pop (PSTRING_STACK S)
 {
 	if ((*S).top <0)
 		return NULL;
-	PGENERIC_ITEM r = &(*S).el[(*S).top--];
+	PSTRING_ITEM r = &(*S).el[(*S).top--];
 	return r; 
 }
 
-void clean (PGENERIC_STACK S)
+void clean (PSTRING_STACK S)
 {
 	while (S->top>=0)
 	{
@@ -39,10 +39,10 @@ void clean (PGENERIC_STACK S)
 	}
 }
 
-PGENERIC_STACK stack_creat()
+PSTRING_STACK stack_creat()
 {
-	PGENERIC_STACK st = calloc (1, sizeof (GENERIC_STACK));
-	memset ((*st).el, 0, 100 * sizeof (GENERIC_ITEM));
+	PSTRING_STACK st = calloc (1, sizeof (STRING_STACK));
+	memset ((*st).el, 0, 100 * sizeof (STRING_ITEM));
 	(*st).top = -1;
 	return st;
 } 
@@ -57,7 +57,7 @@ PGENERIC_STACK stack_creat()
  * myb7_node valid keys >= 0
  */
 
-void printmyb7_node (PMYB7_GENERIC_NODE pNode, int level)
+void printmyb7_node (PMYB7_STRING_NODE pNode, int level)
 {
 	int i = 0;//child and key iteration
 	int j = 0;//level helper
@@ -79,7 +79,7 @@ void printmyb7_node (PMYB7_GENERIC_NODE pNode, int level)
 	}
 }
 
-void printmyb7_tree (PMYB7_GENERIC_TREE pTree)
+void printmyb7_tree (PMYB7_STRING_TREE pTree)
 {
 	if (pTree->root)
 		printmyb7_node (pTree->root, 0);
@@ -87,16 +87,16 @@ void printmyb7_tree (PMYB7_GENERIC_TREE pTree)
 		fprintf (stderr, "NULL\n");
 }
 
-void printmyb7_tree_flowered (PMYB7_GENERIC_TREE pTree)
+void printmyb7_tree_flowered (PMYB7_STRING_TREE pTree)
 {
 
 	fprintf (stdout, "------flower---------\n");
 	printmyb7_tree(pTree);
 }
-PMYB7_GENERIC_NODE allocmyb7_TreeNode ()
+PMYB7_STRING_NODE allocmyb7_TreeNode ()
 {
-	PMYB7_GENERIC_NODE ret;
-	ret = (PMYB7_GENERIC_NODE)calloc (1, sizeof (MYB7_GENERIC_NODE));
+	PMYB7_STRING_NODE ret;
+	ret = (PMYB7_STRING_NODE)calloc (1, sizeof (MYB7_STRING_NODE));
 	ret->k[0][0] = ret->k[1][0] = ret->k[2][0] = ret->k[3][0] = '\0';
 	ret->k[4][0] = ret->k[5][0] = '\0';
 #ifdef _DEBUG_
@@ -105,7 +105,7 @@ PMYB7_GENERIC_NODE allocmyb7_TreeNode ()
 
 	return ret;
 }
-unsigned short is_leaf (PMYB7_GENERIC_NODE node)
+unsigned short is_leaf (PMYB7_STRING_NODE node)
 {
 	int i = 0;
 	for (i = 0; i< ORDER; i++)
@@ -114,10 +114,10 @@ unsigned short is_leaf (PMYB7_GENERIC_NODE node)
 	return 1;
 }
 
-PMYB7_GENERIC_TREE myb7tree_new (char *name)
+PMYB7_STRING_TREE myb7tree_new (char *name)
 {
-	PMYB7_GENERIC_TREE ret;
-	ret = (PMYB7_GENERIC_TREE) calloc (1, sizeof (MYB7_GENERIC_TREE));
+	PMYB7_STRING_TREE ret;
+	ret = (PMYB7_STRING_TREE) calloc (1, sizeof (MYB7_STRING_TREE));
 	if (ret)
 		key_strcpy(ret->name, name);
 	return ret;
@@ -139,10 +139,10 @@ PMYB7_GENERIC_TREE myb7tree_new (char *name)
  * 	>=0	: index of in in out
  * 	<0	: error
  */
-int myb7_tree_find(PMYB7_GENERIC_TREE tree, char *key, int  (*fn) (char *, char*), PMYB7_GENERIC_NODE *out)
+int myb7_tree_find(PMYB7_STRING_TREE tree, char *key, int  (*fn) (char *, char*), PMYB7_STRING_NODE *out)
 {
 	int i = 0;
-	PMYB7_GENERIC_NODE current = tree->root;
+	PMYB7_STRING_NODE current = tree->root;
 	while (current)
 	{
 		if (fn(key,  current->k[0]) < 0)
@@ -207,21 +207,21 @@ int myb7_tree_find(PMYB7_GENERIC_TREE tree, char *key, int  (*fn) (char *, char*
  * 	others	: there is already such key, this is
  * 		  the pointer to it
  */
-PMYB7_GENERIC_NODE myb7_tree_insert(PMYB7_GENERIC_TREE tree, char *key, int  (*fn) (char *, char *))
+PMYB7_STRING_NODE myb7_tree_insert(PMYB7_STRING_TREE tree, char *key, int  (*fn) (char *, char *))
 {
 
 	int i = 0; //go right of key array,
 	int j = 0; //holder of current in
 	int e = 0; //indicator/direction
-	PMYB7_GENERIC_NODE current = tree->root;
+	PMYB7_STRING_NODE current = tree->root;
 	char  in[30] = {0};
 	strcpy(in,  key); //key to insert
-	PMYB7_GENERIC_NODE left; //left child of key to insert
-	PMYB7_GENERIC_NODE right;//right child of key to insert
-	PMYB7_GENERIC_NODE B; //right child will be
-	GENERIC_STACK h;
-	PGENERIC_STACK H = &h;
-	memset (H, 0, sizeof (GENERIC_STACK));
+	PMYB7_STRING_NODE left; //left child of key to insert
+	PMYB7_STRING_NODE right;//right child of key to insert
+	PMYB7_STRING_NODE B; //right child will be
+	STRING_STACK h;
+	PSTRING_STACK H = &h;
+	memset (H, 0, sizeof (STRING_STACK));
 	H->top = -1;
 	int new_pos; /*calculated key position*/
 	int cand_pos = 0; /*posisition of key that will be inserted to parent*/
@@ -272,7 +272,7 @@ PMYB7_GENERIC_NODE myb7_tree_insert(PMYB7_GENERIC_TREE tree, char *key, int  (*f
 #ifdef _DEBUG_
 		printmyb7_tree (tree);
 #endif
-		PGENERIC_ITEM r = pop (H);
+		PSTRING_ITEM r = pop (H);
 		current = r->pnd;
 		e = r->e;
 		//case 1. node has vacant key
@@ -381,7 +381,7 @@ PMYB7_GENERIC_NODE myb7_tree_insert(PMYB7_GENERIC_TREE tree, char *key, int  (*f
 	tree->root = B;
 	return NULL;
 }
-PMYB7_GENERIC_NODE leftmost (PMYB7_GENERIC_NODE a, PGENERIC_STACK A)
+PMYB7_STRING_NODE leftmost (PMYB7_STRING_NODE a, PSTRING_STACK A)
 {
 	if (!a->c[0])
 		return a;
@@ -389,7 +389,7 @@ PMYB7_GENERIC_NODE leftmost (PMYB7_GENERIC_NODE a, PGENERIC_STACK A)
 	return leftmost (a->c[0], A);
 }
 
-PMYB7_GENERIC_NODE rightmost (PMYB7_GENERIC_NODE a, PGENERIC_STACK A)
+PMYB7_STRING_NODE rightmost (PMYB7_STRING_NODE a, PSTRING_STACK A)
 {
 	int j = NUMKEY;
 	for (j = NUMKEY; j>=0 ; j--)
@@ -403,19 +403,19 @@ PMYB7_GENERIC_NODE rightmost (PMYB7_GENERIC_NODE a, PGENERIC_STACK A)
 	return a;
 }
 
-PMYB7_GENERIC_NODE inpre (PMYB7_GENERIC_NODE a, int pos, PGENERIC_STACK A)
+PMYB7_STRING_NODE inpre (PMYB7_STRING_NODE a, int pos, PSTRING_STACK A)
 {
 	push (A, a, pos);
 	return rightmost (a->c[pos], A); 
 }
 
-PMYB7_GENERIC_NODE inpos (PMYB7_GENERIC_NODE a, int pos, PGENERIC_STACK A)
+PMYB7_STRING_NODE inpos (PMYB7_STRING_NODE a, int pos, PSTRING_STACK A)
 {
 	push (A, a, pos+1);
 	return leftmost (a->c[pos+1], A);
 }
 
-int last_key (PMYB7_GENERIC_NODE p)
+int last_key (PMYB7_STRING_NODE p)
 {
 	int i;
 	for (i = 0; i < NUMKEY; i++)
@@ -429,20 +429,20 @@ int last_key (PMYB7_GENERIC_NODE p)
 /**
  * hole node has a single sub tree
  */
-int myb7_tree_del(PMYB7_GENERIC_TREE tree, char *key, int (*fn) (char *, char *))
+int myb7_tree_del(PMYB7_STRING_TREE tree, char *key, int (*fn) (char *, char *))
 {
-	PMYB7_GENERIC_NODE current; /*walk down the tree to find match key*/
+	PMYB7_STRING_NODE current; /*walk down the tree to find match key*/
 	current = tree->root;
-	GENERIC_STACK h, *H = &h;
-	PGENERIC_ITEM pitem;
-	memset (H, 0, sizeof (GENERIC_STACK));
+	STRING_STACK h, *H = &h;
+	PSTRING_ITEM pitem;
+	memset (H, 0, sizeof (STRING_STACK));
 	H->top  = -1;
 	int pos = -1;
-	PMYB7_GENERIC_NODE slay; /*the node deletion actually occurs*/
+	PMYB7_STRING_NODE slay; /*the node deletion actually occurs*/
 	int del = 0; //actual key index deleted in slay
-	PMYB7_GENERIC_NODE hole = NULL; /*deleted node with 1 key and 2 children*/
-	PMYB7_GENERIC_NODE sibling = NULL; /*sibling of hole*/ 
-	PMYB7_GENERIC_NODE parent = NULL; /*parent of hole*/
+	PMYB7_STRING_NODE hole = NULL; /*deleted node with 1 key and 2 children*/
+	PMYB7_STRING_NODE sibling = NULL; /*sibling of hole*/ 
+	PMYB7_STRING_NODE parent = NULL; /*parent of hole*/
 	int i = 0; /*indices*/ 
 	int siblastkey = -1;/*sibling last key*/
 
@@ -696,7 +696,7 @@ int myb7_tree_del(PMYB7_GENERIC_TREE tree, char *key, int (*fn) (char *, char *)
 	} 
 	return 0;
 }
-#ifdef _GENERIC_INPUT_
+#ifdef _STRING_INPUT_
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -716,9 +716,9 @@ void usage(char *app) {
 int main (int argc, char **argv) {
 	int c;
 	char buff[200] = {0};
-	PMYB7_GENERIC_NODE child_found = NULL;
+	PMYB7_STRING_NODE child_found = NULL;
 	int key_index = 0;
-	PMYB7_GENERIC_TREE pTree = myb7tree_new ("first tree"); 
+	PMYB7_STRING_TREE pTree = myb7tree_new ("first tree"); 
 	while(1) {
 		int option_index = 0;
 		static struct option long_options[] = {
@@ -774,12 +774,12 @@ int main (int argc, char **argv) {
 }
 #endif
 
-#ifdef _GENERIC_NOINPUT_
+#ifdef _STRING_NOINPUT_
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
 int wait_user = 0;
-void myb7_tree_insert_wait(PMYB7_GENERIC_TREE pTree, char * key){
+void myb7_tree_insert_wait(PMYB7_STRING_TREE pTree, char * key){
 	if(wait_user)
 		fprintf(stdout, "==================\ninsert : %s \n", key);
 	myb7_tree_insert(pTree, key, (int (*)(char *, char *))strcmp);
@@ -789,7 +789,7 @@ void myb7_tree_insert_wait(PMYB7_GENERIC_TREE pTree, char * key){
 	}
 }
 
-void myb7_tree_del_wait(PMYB7_GENERIC_TREE pTree, char *key){
+void myb7_tree_del_wait(PMYB7_STRING_TREE pTree, char *key){
 	if(wait_user)
 		fprintf(stdout, "==================\ndelete : %s \n", key);
 	myb7_tree_del(pTree, key, (int (*)(char *, char *))strcmp);
@@ -802,8 +802,8 @@ void myb7_tree_del_wait(PMYB7_GENERIC_TREE pTree, char *key){
 void usage(char *app) {
 	fprintf(stdout, "%s [-(n)o wait user key| -(w)ait user key| -(h)elp/list case number -(m)emleak test]\n", app);
 }
-void assertion_found_and_wait(PMYB7_GENERIC_TREE pTree, char *in_key) {
-	PMYB7_GENERIC_NODE found = NULL;
+void assertion_found_and_wait(PMYB7_STRING_TREE pTree, char *in_key) {
+	PMYB7_STRING_NODE found = NULL;
 	if (myb7_tree_find(pTree, in_key, (int (*) (char *, char *))strcmp, &found) < 0){
 		fprintf(stderr, "assertion found failed with key %s\n", in_key);
 		exit(1);
@@ -814,8 +814,8 @@ void assertion_found_and_wait(PMYB7_GENERIC_TREE pTree, char *in_key) {
 	}
 }
 
-void assertion_notfound_and_wait(PMYB7_GENERIC_TREE pTree, char *in_key) {
-	PMYB7_GENERIC_NODE found = NULL;
+void assertion_notfound_and_wait(PMYB7_STRING_TREE pTree, char *in_key) {
+	PMYB7_STRING_NODE found = NULL;
 	if (myb7_tree_find(pTree, in_key, (int (*) (char *, char *))strcmp, &found) >= 0){
 		fprintf(stderr, "assertion notfound failed with key %s\n", in_key);
 		exit(1);
@@ -830,7 +830,7 @@ void assertion_notfound_and_wait(PMYB7_GENERIC_TREE pTree, char *in_key) {
 
 int main (int argc, char **argv)
 {
-	PMYB7_GENERIC_TREE pTree = myb7tree_new ("first tree"); 
+	PMYB7_STRING_TREE pTree = myb7tree_new ("first tree"); 
 	
 	static struct option long_options[]	 = {
 		{"nowait", no_argument, 0, 'n'},
