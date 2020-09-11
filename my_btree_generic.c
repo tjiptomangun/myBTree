@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "my_btree_generic.h"
 
 static void key_strcpy(char *dst, char *src) {
@@ -695,7 +696,85 @@ int myb7_tree_del(PMYB7_GENERIC_TREE tree, char *key, int (*fn) (char *, char *)
 	} 
 	return 0;
 }
+#ifdef _GENERIC_INPUT_
+#include <getopt.h>
+#include <stdio.h>
+#include <stdlib.h>
+void usage(char *app) {
+	fprintf (stdout, "usage : %s i:pf:c:hsr:mudta:e:uj:o:g:l:x:w:\n\
+		-i --       : insert a value\n\
+		-p -- print : tree\n\
+		-f -- find  : find single key\n\
+		-t -- top   : go to root tree\n\
+		-r -- remove: remove a key\n\
+		-h --help   : this help\n\
+		-m --memtest : memory leak test, loop create update and delete test\n\
+		-e           : echo something\n\
+", app);
+}
 
+int main (int argc, char **argv) {
+	int c;
+	char buff[200] = {0};
+	PMYB7_GENERIC_NODE child_found = NULL;
+	int key_index = 0;
+	PMYB7_GENERIC_TREE pTree = myb7tree_new ("first tree"); 
+	while(1) {
+		int option_index = 0;
+		static struct option long_options[] = {
+			{"i", required_argument, 0, 'i'},
+			{"find", required_argument, 0, 'f'},
+			{"print", no_argument, 0, 'p'},
+			{"help", no_argument, 0, 'h'},
+			{"remove", required_argument, 0, 'r'},
+			{"echo", required_argument, 0, 'e'},
+			{"memtest", no_argument, 0, 'm'},
+			{0, 0, 0, 0}
+		};
+		c  = getopt_long(argc, argv, "i:pf:hr:me:", long_options, &option_index);
+		
+		if (c == -1){
+			break;
+		}
+		
+		switch (c) {
+			case 'i' :
+				strcpy(buff, optarg);
+				myb7_tree_insert(pTree, buff, (int (*)(char *, char *))strcmp);
+				break;
+			case 'p' :
+				printmyb7_tree(pTree);
+				break;
+			case 'f' :
+				child_found = NULL;
+				key_index = -1;
+				strcpy(buff, optarg);
+				key_index = myb7_tree_find(pTree, buff, (int (*)(char *, char *))strcmp, &child_found);
+				if (key_index < 0) {
+					fprintf(stdout, "key not found %s\n", buff);
+				}
+				break;
+			case 'r':
+				strcpy(buff, optarg);
+				myb7_tree_del(pTree, buff, (int (*)(char *, char *))strcmp);
+				break;
+			case 'm' :
+				optind = 1;
+				usleep(100000);
+				break;
+			case 'e' :
+				strcpy(buff, optarg);
+				fprintf(stdout, "%s\n", buff);
+				break;
+			default: 
+				break;
+		}
+		
+	}
+}
+#endif
+
+#ifdef _GENERIC_NOINPUT_
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -746,6 +825,8 @@ void assertion_notfound_and_wait(PMYB7_GENERIC_TREE pTree, char *in_key) {
 		getchar();
 	}
 }
+
+
 
 int main (int argc, char **argv)
 {
@@ -1720,9 +1801,30 @@ int main (int argc, char **argv)
 		myb7_tree_del_wait (pTree, "562");
 		myb7_tree_del_wait (pTree, "492");
 		myb7_tree_del_wait (pTree, "28");
-	printmyb7_tree (pTree);
+		myb7_tree_del_wait (pTree, "998");
+		myb7_tree_del_wait (pTree, "909");
+		myb7_tree_del_wait (pTree, "554");
+		myb7_tree_del_wait (pTree, "297");
+		myb7_tree_del_wait (pTree, "487");
+		myb7_tree_del_wait (pTree, "226");
+		myb7_tree_del_wait (pTree, "149");
+		myb7_tree_del_wait (pTree, "867");
+		myb7_tree_del_wait (pTree, "867");
+		myb7_tree_del_wait (pTree, "844");
+		myb7_tree_del_wait (pTree, "779");
+		myb7_tree_del_wait (pTree, "674");
+		myb7_tree_del_wait (pTree, "663");
+		myb7_tree_del_wait (pTree, "633");
+		myb7_tree_del_wait (pTree, "573");
+		myb7_tree_del_wait (pTree, "529");
+		myb7_tree_del_wait (pTree, "499");
+		myb7_tree_del_wait (pTree, "59");
+		myb7_tree_del_wait (pTree, "483");
 		
+		printmyb7_tree (pTree);
+		usleep(100000);
 	}while(optlong == 'm');
 
 	exit (0);
 }
+#endif
